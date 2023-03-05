@@ -25,19 +25,19 @@ const getLike = async (req, res) => {
 
 const getRestaurantByUser = async (req, res) => {
     let { id } = req.params
-    let user = await model.user.findOne({
+    let user = await models.user.findOne({
         where: { user_id: parseInt(id) }
     })
-    console.log(user)
     if (!user) {
         failCode(res, "user not found")
     }
     try {
-        const evaluates = await model.Evaluate.findAll({
+        const evaluates = await models.Evaluate.findAll({
             where: { user_id: parseInt(id) }
         });
         successCode(res, evaluates, "success code")
     } catch (error) {
+        console.log(error)
         error(res, "sever error")
     }
 }
@@ -51,9 +51,9 @@ const addLike = async (req, res) => {
         });
 
         if (!created) {
-            return res.status(400).json('Nhà hàng đã được thích trước đó');
+            return res.status(201).json('Nhà hàng đã được thích trước đó');
         }
-        return res.status(201).json('Thêm nhà hàng thích thành công');
+        return res.status(200).json('Thêm nhà hàng thích thành công');
     } catch (error) {
         res.status(500).send('Internal server error');
     }
@@ -65,9 +65,9 @@ const unLike = async (req, res) => {
     try {
         let idDelete = await models.like_res.destroy({ where: { user_id: req.user.data.user_id, res_id } });
         if (idDelete) {
-            return res.status(201).json(`Xóa nhà hàng có id ${res_id} thành công`);
+            return res.status(200).json(`Xóa nhà hàng có id ${res_id} thành công`);
         } else {
-            return res.status(400).json(`Nhà hàng có id ${res_id} chưa được thêm vào danh sách thích `)
+            return res.status(201).json(`Nhà hàng có id ${res_id} chưa được thêm vào danh sách thích `)
         }
 
     } catch (error) {
@@ -79,7 +79,7 @@ const unLike = async (req, res) => {
 const addEvalute = async (req, res) => {
     const { res_id, content } = req.body;
     try {
-        let data = await model.Evaluate.create({
+        let data = await models.Evaluate.create({
             user_id: req.user.data.user_id,
             res_id,
             content
@@ -106,8 +106,7 @@ const createOrderByUser = async (req, res) => {
             where: { user_id: parseInt(user_id), food_id: parseInt(req.body.food_id) }
         })
         if (checkFoodId) {
-            failCode(res, "Bạn đã thích thức ăn này rồi")
-            return;
+            return res.status(201).json(`Bạn đã thích thức ăn này rồi`);
         } else {
             const data = await models.order.create({
                 user_id,
